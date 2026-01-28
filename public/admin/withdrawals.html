@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monety Admin - Saques</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="admin.css" />
+</head>
+
+<body>
+  <div class="admin-container">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">M</div>
+        <div class="sidebar-logo-text">
+          <h3>Monety</h3>
+          <p>Admin</p>
+        </div>
+      </div>
+
+      <ul class="sidebar-nav">
+        <li><a href="dashboard.html">📊 Dashboard</a></li>
+        <li><a href="users.html">👥 Usuários</a></li>
+        <li><a href="withdrawals.html" class="active">💰 Saques</a></li>
+      </ul>
+
+      <div class="sidebar-logout">
+        <button onclick="logoutAdmin()">Sair</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="header">
+        <h1>Gerenciamento de Saques</h1>
+        <div class="header-info">
+          <span>Pendentes:</span>
+          <span class="user" id="pendingCount">0</span>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <div class="table-header">
+          <h2>Pedidos de Saque</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID Saque</th>
+              <th>Usuário</th>
+              <th>Valor Solicitado</th>
+              <th>Taxa</th>
+              <th>Valor Líquido</th>
+              <th>Chave PIX</th>
+              <th>Data</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="withdrawalsTable">
+            <tr>
+              <td colspan="9" class="loading">
+                <div class="spinner"></div>
+                Carregando saques...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="auth.js"></script>
+  <script src="admin.js"></script>
+
+  <script>
+    checkAdminAuth();
+
+    async function loadWithdrawals() {
+      try {
+        const withdrawalsSnap = await db.collection('withdrawals').get();
+        const withdrawals = withdrawalsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        const pending = withdrawals.filter(w => w.status === 'pending').length;
+        document.getElementById('pendingCount').textContent = pending;
+
+        const tbody = document.getElementById('withdrawalsTable');
+        tbody.innerHTML = '';
+
+        if (withdrawals.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px; color: #666;">Nenhum saque registrado</td></tr>';
+          return;
+        }
+
+        withdrawals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).forEach(withdrawal => {
+          const row = document.createElement('tr');
+          const date = new Date(withdrawal.createdAt).toLocaleString('pt-BR');
+          const statusClass = `status-${withdrawal.status}`;
+          const statusText = {
+            'pending': 'Pendente',
+            'approved': 'Aprovado',
+            'rejected': 'Rejeitado',
+            'processing': 'Processando'
+          }[withdrawal.status] || withdrawal.status;
+
+          row.innerHTML = `
+            <td>${withdrawal.id.substring(0, 8)}</td>
+            <td>${withdrawal.userName || 'Anônimo'}</td>
+            <td>R$ ${(withdrawal.amount || 0).toFixed(2)}</td>
+            <td>R$ ${(withdrawal.fee || 0).toFixed(2)}</td>
+            <td>R$ ${(withdrawal.netAmount || 0).toFixed(2)}</td>
+            <td>${withdrawal.pixKey}</td>
+            <td>${date}</td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>
+              <div class="action-buttons">
+                ${withdrawal.status === 'pending' 
+                  ? `
+                    <button class="btn-small btn-approve" onclick="approveWithdrawal('${withdrawal.id}', '${withdrawal.userId}', ${withdrawal.netAmount})">Aprovar</button>
+                    <button class="btn-small btn-reject" onclick="rejectWithdrawal('${withdrawal.id}', '${withdrawal.userId}', ${withdrawal.amount})">Rejeitar</button>
+                  `
+                  : `<button class="btn-small btn-edit" disabled>-</button>`
+                }
+              </div>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Erro ao carregar saques:', error);
+      }
+    }
+
+    async function approveWithdrawal(withdrawalId, userId, netAmount) {
+      if (confirm(`Aprovar saque de R$ ${netAmount.toFixed(2)}?`)) {
+        try {
+          // Atualizar status do saque
+          await db.collection('withdrawals').doc(withdrawalId).update({
+            status: 'approved',
+            approvedAt: new Date().toISOString()
+          });
+
+          loadWithdrawals();
+        } catch (error) {
+          alert('Erro ao aprovar saque: ' + error.message);
+        }
+      }
+    }
+
+    async function rejectWithdrawal(withdrawalId, userId, amount) {
+      if (confirm(`Rejeitar saque de R$ ${amount.toFixed(2)}?\nO valor será devolvido ao saldo do usuário.`)) {
+        try {
+          // Atualizar status do saque
+          await db.collection('withdrawals').doc(withdrawalId).update({
+            status: 'rejected',
+            rejectedAt: new Date().toISOString()
+          });
+
+          // Devolver o valor ao saldo do usuário
+          const userDoc = await db.collection('users').doc(userId).get();
+          if (userDoc.exists) {
+            const currentBalance = userDoc.data().balance || 0;
+            await db.collection('users').doc(userId).update({
+              balance: currentBalance + amount
+            });
+          }
+
+          loadWithdrawals();
+        } catch (error) {
+          alert('Erro ao rejeitar saque: ' + error.message);
+        }
+      }
+    }
+
+    // Carregamento inicial
+    loadWithdrawals();
+    setInterval(loadWithdrawals, 30000); // Atualizar a cada 30 segundos
+  </script>
+</body>
+
+</html>
