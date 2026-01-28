@@ -1,11 +1,12 @@
-import React, { useState } from "react";
-import { auth, db } from "../firebase/firebase.js";
+import React, { useState, useEffect } from "react";
+import { auth, db } from "../firebase/firebase.js"; // Ajustado pro seu firebase modular
 import { registerUser, loginUser } from "../firebase/auth.js";
-import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { doc, getDoc, updateDoc } from "firebase/firestore"; // Firestore modular
 import { CreditCard, Mail, Phone, Clock, AlertCircle, CheckCircle } from "lucide-react";
 
 export default function Profile() {
-  const [activeSection, setActiveSection] = useState("main");
+  // Estados gerais
+  const [activeSection, setActiveSection] = useState("main"); // main / withdraw / deposit
   const [user, setUser] = useState({ uid: "", name: "", email: "", balance: 0 });
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,18 +24,23 @@ export default function Profile() {
   // Depósito
   const [depositAmount, setDepositAmount] = useState("");
 
+  // Mock: Horário de saque permitido (08:00 - 20:00)
   const canWithdrawNow = () => {
     const hour = new Date().getHours();
     if (hour >= 8 && hour <= 20) return { allowed: true };
     return { allowed: false, message: "Saque disponível entre 08:00 e 20:00" };
   };
 
+  // Atualiza dados do usuário
   const fetchUser = async (uid) => {
     const docRef = doc(db, "users", uid);
     const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) setUser({ uid, ...docSnap.data() });
+    if (docSnap.exists()) {
+      setUser({ uid, ...docSnap.data() });
+    }
   };
 
+  // Cadastro
   const handleSignup = async () => {
     try {
       const newUser = await registerUser(name, email, password);
@@ -45,6 +51,7 @@ export default function Profile() {
     }
   };
 
+  // Login
   const handleLogin = async () => {
     try {
       const userData = await loginUser(email, password);
@@ -55,6 +62,7 @@ export default function Profile() {
     }
   };
 
+  // Solicitar saque
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmount);
     if (!amount || amount > user.balance) {
@@ -64,14 +72,15 @@ export default function Profile() {
 
     const fee = amount * 0.1;
     const net = amount - fee;
-    const newBalance = user.balance - amount;
 
+    const newBalance = user.balance - amount;
     await updateDoc(doc(db, "users", user.uid), { balance: newBalance });
     setUser({ ...user, balance: newBalance });
     setShowSuccess(`Saque de R$ ${net.toFixed(2)} solicitado com sucesso!`);
     setWithdrawAmount("");
   };
 
+  // Depositar (simulado)
   const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
     if (!amount) {
@@ -86,6 +95,7 @@ export default function Profile() {
     setDepositAmount("");
   };
 
+  // Render principal
   const renderMain = () => (
     <div className="animate-slide-up">
       <h2 className="text-xl font-bold text-white mb-6">Bem-vindo(a), {user.name || "usuário"}</h2>
@@ -107,8 +117,11 @@ export default function Profile() {
     </div>
   );
 
+  // Render saque
   const renderWithdraw = () => {
     const withdrawCheck = canWithdrawNow();
+    const fee = parseFloat(withdrawAmount) * 0.1 || 0;
+    const netAmount = (parseFloat(withdrawAmount) || 0) - fee;
 
     return (
       <div className="animate-slide-up">
@@ -162,7 +175,7 @@ export default function Profile() {
           />
         </div>
 
-        {/* BLOCO PIX */}
+        {/* BLOCO PIX COMEÇA AQUI */}
         <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-4">
           <label className="text-gray-400 text-sm mb-3 block">Tipo de chave PIX</label>
 
@@ -226,6 +239,7 @@ export default function Profile() {
     );
   };
 
+  // Render depósito
   const renderDeposit = () => (
     <div className="animate-slide-up">
       <button
@@ -276,6 +290,7 @@ export default function Profile() {
     </div>
   );
 
+  // Render login/cadastro
   const renderAuth = () => (
     <div className="animate-slide-up max-w-md mx-auto mt-10">
       <h2 className="text-xl font-bold text-white mb-6">Login / Cadastro</h2>
@@ -315,13 +330,7 @@ export default function Profile() {
 
   return (
     <div className="p-6 min-h-screen bg-dark-800">
-      {!user.uid
-        ? renderAuth()
-        : activeSection === "main"
-        ? renderMain()
-        : activeSection === "withdraw"
-        ? renderWithdraw()
-        : renderDeposit()}
+      {!user.uid ? renderAuth() : activeSection === "main" ? renderMain() : activeSection === "withdraw" ? renderWithdraw() : renderDeposit()}
     </div>
   );
-          }
+}
