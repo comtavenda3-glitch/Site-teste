@@ -11,12 +11,12 @@ interface ProfileProps {
 }
 
 export function Profile({ user, onLogout, onDeposit, onConfirmDeposit, onWithdraw }: ProfileProps) {
-  const [activeSection, setActiveSection] = useState < 'main' | 'deposit' | 'withdraw' | 'deposits-history' | 'withdrawals-history' > ('main')
+  const [activeSection, setActiveSection] = useState<'main' | 'deposit' | 'withdraw' | 'deposits-history' | 'withdrawals-history'>('main')
   const [depositAmount, setDepositAmount] = useState('')
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [pixKey, setPixKey] = useState('')
   const [pixType, setPixType] = useState('cpf')
-  const [currentDeposit, setCurrentDeposit] = useState < Deposit | null > (null)
+  const [currentDeposit, setCurrentDeposit] = useState<Deposit | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
   const [showError, setShowError] = useState('')
   const [copied, setCopied] = useState(false)
@@ -24,12 +24,8 @@ export function Profile({ user, onLogout, onDeposit, onConfirmDeposit, onWithdra
   const canWithdrawNow = (): { allowed: boolean; message?: string } => {
     const now = new Date()
     const hour = now.getHours()
-
     if (hour < 9 || hour >= 17) {
-      return {
-        allowed: false,
-        message: 'Saques permitidos apenas das 09:00 às 17:00'
-      }
+      return { allowed: false, message: 'Saques permitidos apenas das 09:00 às 17:00' }
     }
     return { allowed: true }
   }
@@ -113,13 +109,10 @@ export function Profile({ user, onLogout, onDeposit, onConfirmDeposit, onWithdra
 
   const renderMain = () => (
     <div className="animate-fade-in">
-      {/* Header do Perfil */}
       <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-2xl p-6 mb-4">
         <div className="flex items-center gap-4 mb-4">
           <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center shadow-lg shadow-primary-500/30">
-            <span className="text-2xl font-bold text-white">
-              {user.name ? user.name[0].toUpperCase() : user.email[0].toUpperCase()}
-            </span>
+            <span className="text-2xl font-bold text-white">{user.name ? user.name[0].toUpperCase() : user.email[0].toUpperCase()}</span>
           </div>
           <div>
             <h2 className="text-xl font-bold text-white">{user.name || user.email.split('@')[0]}</h2>
@@ -142,7 +135,6 @@ export function Profile({ user, onLogout, onDeposit, onConfirmDeposit, onWithdra
         </div>
       </div>
 
-      {/* Botões de Ação */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <button
           onClick={() => setActiveSection('deposit')}
@@ -165,7 +157,6 @@ export function Profile({ user, onLogout, onDeposit, onConfirmDeposit, onWithdra
         </button>
       </div>
 
-      {/* Botões do Telegram */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <a
           href="https://t.me/+qasEE92ROa5iOTYx"
@@ -188,7 +179,6 @@ export function Profile({ user, onLogout, onDeposit, onConfirmDeposit, onWithdra
         </a>
       </div>
 
-      {/* Histórico Financeiro */}
       <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-2xl p-4 mb-4">
         <h3 className="font-bold text-white mb-4 flex items-center gap-2">
           <History className="w-5 h-5 text-primary-500" />
@@ -216,7 +206,6 @@ export function Profile({ user, onLogout, onDeposit, onConfirmDeposit, onWithdra
         </div>
       </div>
 
-      {/* Botão de Logout */}
       <button
         onClick={onLogout}
         className="w-full bg-dark-700/80 backdrop-blur-sm border border-red-500/30 rounded-xl p-4 flex items-center justify-center gap-2 hover:bg-red-500/10 transition-all"
@@ -227,20 +216,20 @@ export function Profile({ user, onLogout, onDeposit, onConfirmDeposit, onWithdra
     </div>
   )
 
-  const renderDeposit = () => (
+const renderDeposit = () => (
     <div className="animate-slide-up">
       <button
         onClick={() => {
           setActiveSection('main')
-          setCurrentDeposit(null)
           setDepositAmount('')
+          setCurrentDeposit(null)
         }}
         className="text-gray-400 mb-4 hover:text-white transition-colors"
       >
         ← Voltar
       </button>
 
-      <h2 className="text-xl font-bold text-white mb-6">Depositar via PIX</h2>
+      <h2 className="text-xl font-bold text-white mb-6">Depositar</h2>
 
       {showError && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4 flex items-center gap-3 animate-slide-down">
@@ -256,82 +245,41 @@ export function Profile({ user, onLogout, onDeposit, onConfirmDeposit, onWithdra
         </div>
       )}
 
-      {!currentDeposit ? (
-        <>
-          <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-4">
-            <label className="text-gray-400 text-sm mb-2 block">Valor do depósito</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
-              <input
-                type="number"
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(e.target.value)}
-                placeholder="0,00"
-                className="w-full bg-dark-600 border border-dark-500 rounded-xl py-4 pl-12 pr-4 text-white text-lg font-bold placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-all"
-              />
-            </div>
-            <p className="text-gray-500 text-xs mt-2">Mínimo: R$ 30,00</p>
-          </div>
+      <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-4">
+        <label className="text-gray-400 text-sm mb-2 block">Valor do Depósito</label>
+        <input
+          type="number"
+          value={depositAmount}
+          onChange={(e) => setDepositAmount(e.target.value)}
+          placeholder="R$ 30,00"
+          className="w-full bg-dark-600 border border-dark-500 rounded-xl py-4 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-all"
+        />
+      </div>
 
-          <div className="grid grid-cols-4 gap-2 mb-6">
-            {[30, 50, 100, 200].map((amount) => (
-              <button
-                key={amount}
-                onClick={() => setDepositAmount(amount.toString())}
-                className="bg-dark-600/50 hover:bg-dark-500 text-white py-3 rounded-xl font-semibold transition-all"
-              >
-                R$ {amount}
-              </button>
-            ))}
-          </div>
+      <button
+        onClick={handleDeposit}
+        className="w-full bg-primary-500 hover:bg-primary-600 rounded-xl py-4 text-white font-semibold transition-all"
+      >
+        Gerar PIX
+      </button>
 
-          <button
-            onClick={handleDeposit}
-            className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold py-4 rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all shadow-lg shadow-primary-500/30"
-          >
-            GERAR PIX
-          </button>
-        </>
-      ) : (
-        <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-6">
-          <div className="text-center mb-6">
-            <p className="text-gray-400 mb-2">Valor do depósito</p>
-            <p className="text-3xl font-bold text-primary-500">R$ {currentDeposit.amount.toFixed(2)}</p>
+      {currentDeposit && (
+        <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mt-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-gray-400 text-sm">PIX gerado</span>
+            <span
+              className="text-primary-500 text-sm cursor-pointer"
+              onClick={copyPixCode}
+            >
+              {copied ? 'Copiado!' : 'Copiar'}
+            </span>
           </div>
-
-          <div className="bg-dark-600 rounded-xl p-4 mb-4">
-            <p className="text-gray-400 text-sm mb-2">Código PIX Copia e Cola</p>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={currentDeposit.pixCode}
-                readOnly
-                className="flex-1 bg-dark-700 border border-dark-500 rounded-lg p-3 text-white text-xs font-mono"
-              />
-              <button
-                onClick={copyPixCode}
-                className={`p-3 rounded-lg transition-all ${copied ? 'bg-primary-500 text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}`}
-              >
-                {copied ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 mb-6">
-            <div className="flex items-start gap-3">
-              <Clock className="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-primary-400 font-semibold text-sm">Aguardando pagamento</p>
-                <p className="text-gray-400 text-xs">Após o pagamento, clique no botão abaixo para confirmar</p>
-              </div>
-            </div>
-          </div>
-
+          <p className="text-white break-all">{currentDeposit.pixCode}</p>
           <button
             onClick={handleConfirmDeposit}
-            className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold py-4 rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all shadow-lg shadow-primary-500/30"
+            className="mt-4 w-full bg-primary-500 hover:bg-primary-600 rounded-xl py-3 text-white font-semibold transition-all"
           >
-            JÁ FIZ O PAGAMENTO
+            Confirmar Depósito
           </button>
         </div>
       )}
@@ -339,117 +287,176 @@ export function Profile({ user, onLogout, onDeposit, onConfirmDeposit, onWithdra
   )
 
   const renderWithdraw = () => {
-  const withdrawCheck = canWithdrawNow()
-  const fee = parseFloat(withdrawAmount) * 0.10 || 0
-  const netAmount = (parseFloat(withdrawAmount) || 0) - fee
+    const withdrawCheck = canWithdrawNow()
+    const fee = parseFloat(withdrawAmount) * 0.10 || 0
+    const netAmount = (parseFloat(withdrawAmount) || 0) - fee
 
-  return (
-    <div className="animate-slide-up">
+    return (
+      <div className="animate-slide-up">
+        <button
+          onClick={() => {
+            setActiveSection('main')
+            setWithdrawAmount('')
+            setPixKey('')
+          }}
+          className="text-gray-400 mb-4 hover:text-white transition-colors"
+        >
+          ← Voltar
+        </button>
+
+        <h2 className="text-xl font-bold text-white mb-6">Sacar via PIX</h2>
+
+        {!withdrawCheck.allowed && (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-4 flex items-start gap-3 animate-slide-down">
+            <Clock className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-yellow-400 font-semibold text-sm">Fora do horário de saque</p>
+              <p className="text-gray-400 text-xs">{withdrawCheck.message}</p>
+            </div>
+          </div>
+        )}
+
+        {showError && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4 flex items-center gap-3 animate-slide-down">
+            <AlertCircle className="w-5 h-5 text-red-500" />
+            <p className="text-red-400 text-sm">{showError}</p>
+          </div>
+        )}
+
+        {showSuccess && (
+          <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 mb-4 flex items-center gap-3 animate-slide-down">
+            <CheckCircle className="w-5 h-5 text-primary-500" />
+            <p className="text-primary-400 text-sm">Saque solicitado com sucesso!</p>
+          </div>
+        )}
+
+        <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-gray-400 text-sm">Saldo disponível</span>
+            <span className="text-white font-bold">R$ {user.balance.toFixed(2)}</span>
+          </div>
+        </div>
+
+        {/* BLOCO PIX COMEÇA AQUI */}
+        <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-4">
+          <label className="text-gray-400 text-sm mb-3 block">Tipo de chave PIX</label>
+
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            <button
+              onClick={() => setPixType('cpf')}
+              className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
+                pixType === 'cpf' ? 'bg-primary-500/20 border border-primary-500' : 'bg-dark-600 border border-dark-500'
+              }`}
+            >
+              <CreditCard className={`w-5 h-5 ${pixType === 'cpf' ? 'text-primary-500' : 'text-gray-400'}`} />
+              <span className={`text-xs ${pixType === 'cpf' ? 'text-primary-400' : 'text-gray-400'}`}>CPF</span>
+            </button>
+
+            <button
+              onClick={() => setPixType('email')}
+              className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
+                pixType === 'email' ? 'bg-primary-500/20 border border-primary-500' : 'bg-dark-600 border border-dark-500'
+              }`}
+            >
+              <Mail className={`w-5 h-5 ${pixType === 'email' ? 'text-primary-500' : 'text-gray-400'}`} />
+              <span className={`text-xs ${pixType === 'email' ? 'text-primary-400' : 'text-gray-400'}`}>Email</span>
+            </button>
+
+            <button
+              onClick={() => setPixType('phone')}
+              className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
+                pixType === 'phone' ? 'bg-primary-500/20 border border-primary-500' : 'bg-dark-600 border border-dark-500'
+              }`}
+            >
+              <Phone className={`w-5 h-5 ${pixType === 'phone' ? 'text-primary-500' : 'text-gray-400'}`} />
+              <span className={`text-xs ${pixType === 'phone' ? 'text-primary-400' : 'text-gray-400'}`}>Telefone</span>
+            </button>
+          </div>
+
+          <div>
+            <label className="text-gray-400 text-sm mb-2 block">
+              Chave PIX ({pixType.toUpperCase()})
+            </label>
+            <input
+              type="text"
+              value={pixKey}
+              onChange={(e) => setPixKey(e.target.value)}
+              placeholder={
+                pixType === 'cpf' ? '000.000.000-00' :
+                pixType === 'email' ? 'seu@email.com' :
+                '(00) 00000-0000'
+              }
+              className="w-full bg-dark-600 border border-dark-500 rounded-xl py-4 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-all"
+            />
+          </div>
+        </div>
+
+        <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-4">
+          <div className="flex justify-between mb-2">
+            <span className="text-gray-400 text-sm">Taxa</span>
+            <span className="text-white text-sm">R$ {fee.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between mb-2">
+            <span className="text-gray-400 text-sm">Você receberá</span>
+            <span className="text-white font-bold">R$ {netAmount.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleWithdraw}
+          className="w-full bg-primary-500 hover:bg-primary-600 rounded-xl py-4 text-white font-semibold transition-all"
+        >
+          Solicitar Saque
+        </button>
+      </div>
+    )
+  }
+
+  const renderDepositsHistory = () => (
+    <div>
       <button
-        onClick={() => {
-          setActiveSection('main')
-          setWithdrawAmount('')
-          setPixKey('')
-        }}
+        onClick={() => setActiveSection('main')}
         className="text-gray-400 mb-4 hover:text-white transition-colors"
       >
         ← Voltar
       </button>
-
-      <h2 className="text-xl font-bold text-white mb-6">Sacar via PIX</h2>
-
-      {!withdrawCheck.allowed && (
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-4 flex items-start gap-3 animate-slide-down">
-          <Clock className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-yellow-400 font-semibold text-sm">Fora do horário de saque</p>
-            <p className="text-gray-400 text-xs">{withdrawCheck.message}</p>
-          </div>
+      <h2 className="text-xl font-bold text-white mb-4">Histórico de Depósitos</h2>
+      {user.deposits.length === 0 && <p className="text-gray-400">Nenhum depósito realizado.</p>}
+      {user.deposits.map((d) => (
+        <div key={d.id} className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-2 flex justify-between items-center">
+          <span className="text-white font-medium">R$ {d.amount.toFixed(2)}</span>
+          <span className="text-gray-400 text-xs">{new Date(d.date).toLocaleString()}</span>
         </div>
-      )}
-
-      {showError && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4 flex items-center gap-3 animate-slide-down">
-          <AlertCircle className="w-5 h-5 text-red-500" />
-          <p className="text-red-400 text-sm">{showError}</p>
-        </div>
-      )}
-
-      {showSuccess && (
-        <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 mb-4 flex items-center gap-3 animate-slide-down">
-          <CheckCircle className="w-5 h-5 text-primary-500" />
-          <p className="text-primary-400 text-sm">Saque solicitado com sucesso!</p>
-        </div>
-      )}
-
-      <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-gray-400 text-sm">Saldo disponível</span>
-          <span className="text-white font-bold">R$ {user.balance.toFixed(2)}</span>
-        </div>
-      </div>
-
-      {/* BLOCO PIX COMEÇA AQUI */}
-      <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-4">
-        <label className="text-gray-400 text-sm mb-3 block">Tipo de chave PIX</label>
-
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          <button
-            onClick={() => setPixType('cpf')}
-            className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
-              pixType === 'cpf' ? 'bg-primary-500/20 border border-primary-500' : 'bg-dark-600 border border-dark-500'
-            }`}
-          >
-            <CreditCard className={`w-5 h-5 ${pixType === 'cpf' ? 'text-primary-500' : 'text-gray-400'}`} />
-            <span className={`text-xs ${pixType === 'cpf' ? 'text-primary-400' : 'text-gray-400'}`}>CPF</span>
-          </button>
-
-          <button
-            onClick={() => setPixType('email')}
-            className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
-              pixType === 'email' ? 'bg-primary-500/20 border border-primary-500' : 'bg-dark-600 border border-dark-500'
-            }`}
-          >
-            <Mail className={`w-5 h-5 ${pixType === 'email' ? 'text-primary-500' : 'text-gray-400'}`} />
-            <span className={`text-xs ${pixType === 'email' ? 'text-primary-400' : 'text-gray-400'}`}>Email</span>
-          </button>
-
-          <button
-            onClick={() => setPixType('phone')}
-            className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
-              pixType === 'phone' ? 'bg-primary-500/20 border border-primary-500' : 'bg-dark-600 border border-dark-500'
-            }`}
-          >
-            <Phone className={`w-5 h-5 ${pixType === 'phone' ? 'text-primary-500' : 'text-gray-400'}`} />
-            <span className={`text-xs ${pixType === 'phone' ? 'text-primary-400' : 'text-gray-400'}`}>Telefone</span>
-          </button>
-        </div>
-
-        <div>
-          <label className="text-gray-400 text-sm mb-2 block">
-            Chave PIX ({pixType.toUpperCase()})
-          </label>
-          <input
-            type="text"
-            value={pixKey}
-            onChange={(e) => setPixKey(e.target.value)}
-            placeholder={
-              pixType === 'cpf' ? '000.000.000-00' :
-              pixType === 'email' ? 'seu@email.com' :
-              '(00) 00000-0000'
-            }
-            className="w-full bg-dark-600 border border-dark-500 rounded-xl py-4 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-all"
-          />
-        </div>
-      </div>
-      {/* BLOCO PIX TERMINA AQUI */}
-
-      <button
-        onClick={handleWithdraw}
-        className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold py-4 rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all shadow-lg shadow-primary-500/30"
-      >
-        SACAR R$ {netAmount.toFixed(2)}
-      </button>
+      ))}
     </div>
   )
-  }
+
+  const renderWithdrawalsHistory = () => (
+    <div>
+      <button
+        onClick={() => setActiveSection('main')}
+        className="text-gray-400 mb-4 hover:text-white transition-colors"
+      >
+        ← Voltar
+      </button>
+      <h2 className="text-xl font-bold text-white mb-4">Histórico de Saques</h2>
+      {user.withdrawals.length === 0 && <p className="text-gray-400">Nenhum saque realizado.</p>}
+      {user.withdrawals.map((w) => (
+        <div key={w.id} className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-2 flex justify-between items-center">
+          <span className="text-white font-medium">R$ {w.amount.toFixed(2)}</span>
+          <span className={`text-xs ${w.status === 'pending' ? 'text-yellow-400' : 'text-green-400'}`}>{w.status}</span>
+        </div>
+      ))}
+    </div>
+  )
+
+  return (
+    <div className="px-4 py-6">
+      {activeSection === 'main' && renderMain()}
+      {activeSection === 'deposit' && renderDeposit()}
+      {activeSection === 'withdraw' && renderWithdraw()}
+      {activeSection === 'deposits-history' && renderDepositsHistory()}
+      {activeSection === 'withdrawals-history' && renderWithdrawalsHistory()}
+    </div>
+  )
+            }
