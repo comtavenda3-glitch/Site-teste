@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monety Admin - Usuários</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="admin.css" />
+</head>
+
+<body>
+  <div class="admin-container">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">M</div>
+        <div class="sidebar-logo-text">
+          <h3>Monety</h3>
+          <p>Admin</p>
+        </div>
+      </div>
+
+      <ul class="sidebar-nav">
+        <li><a href="dashboard.html">📊 Dashboard</a></li>
+        <li><a href="users.html" class="active">👥 Usuários</a></li>
+        <li><a href="withdrawals.html">💰 Saques</a></li>
+      </ul>
+
+      <div class="sidebar-logout">
+        <button onclick="logoutAdmin()">Sair</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="header">
+        <h1>Gerenciamento de Usuários</h1>
+        <div class="header-info">
+          <span>Total:</span>
+          <span class="user" id="totalUsersHeader">0</span>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <div class="table-header">
+          <h2>Todas as Contas</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Email</th>
+              <th>Nome</th>
+              <th>Saldo</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="usersTable">
+            <tr>
+              <td colspan="6" class="loading">
+                <div class="spinner"></div>
+                Carregando usuários...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de Edição -->
+  <div id="editUserModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Editar Usuário</h2>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>ID do Usuário</label>
+          <input type="text" id="editUserId" readonly />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="editUserEmail" readonly />
+        </div>
+        <div class="form-group">
+          <label>Nome</label>
+          <input type="text" id="editUserName" />
+        </div>
+        <div class="form-group">
+          <label>Saldo (R$)</label>
+          <input type="number" id="editUserBalance" step="0.01" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button class="btn-primary" onclick="saveUserChanges()">Salvar Alterações</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="auth.js"></script>
+  <script src="admin.js"></script>
+
+  <script>
+    checkAdminAuth();
+
+    let currentEditingUserId = null;
+
+    async function loadUsers() {
+      try {
+        const usersSnap = await db.collection('users').get();
+        const users = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        document.getElementById('totalUsersHeader').textContent = users.length;
+
+        const tbody = document.getElementById('usersTable');
+        tbody.innerHTML = '';
+
+        if (users.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #666;">Nenhum usuário registrado</td></tr>';
+          return;
+        }
+
+        users.forEach((user, index) => {
+          const row = document.createElement('tr');
+          const status = user.banned ? 'Banido' : 'Ativo';
+          const statusClass = user.banned ? 'status-banned' : 'status-active';
+
+          row.innerHTML = `
+            <td>${user.displayId || user.id.substring(0, 8)}</td>
+            <td>${user.email}</td>
+            <td>${user.name || '-'}</td>
+            <td>R$ ${(user.balance || 0).toFixed(2)}</td>
+            <td><span class="status-badge ${statusClass}">${status}</span></td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn-small btn-edit" onclick="openEditModal('${user.id}', '${user.email}', '${user.name || ''}', ${user.balance || 0})">Editar</button>
+                ${user.banned 
+                  ? `<button class="btn-small btn-unban" onclick="unbanUser('${user.id}')">Desbanir</button>` 
+                  : `<button class="btn-small btn-ban" onclick="banUser('${user.id}')">Banir</button>`
+                }
+                <button class="btn-small btn-delete" onclick="deleteUser('${user.id}')">Deletar</button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Erro ao carregar usuários:', error);
+      }
+    }
+
+    function openEditModal(userId, email, name, balance) {
+      currentEditingUserId = userId;
+      document.getElementById('editUserId').value = userId;
+      document.getElementById('editUserEmail').value = email;
+      document.getElementById('editUserName').value = name;
+      document.getElementById('editUserBalance').value = balance;
+      document.getElementById('editUserModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('editUserModal').classList.remove('active');
+      currentEditingUserId = null;
+    }
+
+    async function saveUserChanges() {
+      try {
+        const name = document.getElementById('editUserName').value;
+        const balance = parseFloat(document.getElementById('editUserBalance').value);
+
+        await db.collection('users').doc(currentEditingUserId).update({
+          name,
+          balance: Math.max(0, balance)
+        });
+
+        loadUsers();
+        closeModal();
+      } catch (error) {
+        alert('Erro ao salvar alterações: ' + error.message);
+      }
+    }
+
+    async function banUser(userId) {
+      if (confirm('Tem certeza que deseja banir este usuário?')) {
+        try {
+          await db.collection('users').doc(userId).update({ banned: true });
+          loadUsers();
+        } catch (error) {
+          alert('Erro ao banir usuário: ' + error.message);
+        }
+      }
+    }
+
+    async function unbanUser(userId) {
+      if (confirm('Tem certeza que deseja desbanir este usuário?')) {
+        try {
+          await db.collection('users').doc(userId).update({ banned: false });
+          loadUsers();
+        } catch (error) {
+          alert('Erro ao desbanir usuário: ' + error.message);
+        }
+      }
+    }
+
+    async function deleteUser(userId) {
+      if (confirm('Tem certeza que deseja deletar este usuário? Esta ação é irreversível!')) {
+        try {
+          await db.collection('users').doc(userId).delete();
+          loadUsers();
+        } catch (error) {
+          alert('Erro ao deletar usuário: ' + error.message);
+        }
+      }
+    }
+
+    // Carregamento inicial
+    loadUsers();
+  </script>
+</body>
+
+</html>
