@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { auth, db } from "../firebase/firebase.js";
-import { registerUser, loginUser } from "../firebase/auth.js";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { auth, db } from "../firebase/firebase.js"; // Import do seu firebase.js
+import { registerUser, loginUser } from "../firebase/auth.js"; // Funções de auth
+import { doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { CreditCard, Mail, Phone, Clock, AlertCircle, CheckCircle } from "lucide-react";
 
 export default function Profile() {
@@ -333,4 +333,4 @@ export default function Profile() {
       {!user.uid ? renderAuth() : activeSection === "main" ? renderMain() : activeSection === "withdraw" ? renderWithdraw() : renderDeposit()}
     </div>
   );
-}
+          }
