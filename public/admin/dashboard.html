@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monety Admin - Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="admin.css" />
+</head>
+
+<body>
+  <div class="admin-container">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">M</div>
+        <div class="sidebar-logo-text">
+          <h3>Monety</h3>
+          <p>Admin</p>
+        </div>
+      </div>
+
+      <ul class="sidebar-nav">
+        <li><a href="dashboard.html" class="active">📊 Dashboard</a></li>
+        <li><a href="users.html">👥 Usuários</a></li>
+        <li><a href="withdrawals.html">💰 Saques</a></li>
+      </ul>
+
+      <div class="sidebar-logout">
+        <button onclick="logoutAdmin()">Sair</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="header">
+        <h1>Dashboard</h1>
+        <div class="header-info">
+          <span>Bem-vindo,</span>
+          <span class="user" id="adminEmail">Admin</span>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total de Usuários</div>
+          <div class="stat-value" id="totalUsers">0</div>
+          <div class="stat-change" id="activeUsers">0 ativos</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Saques Pendentes</div>
+          <div class="stat-value" id="pendingWithdrawals">0</div>
+          <div class="stat-change" id="withdrawalAmount">R$ 0,00</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Saldo Total do Plataforma</div>
+          <div class="stat-value" id="totalBalance">R$ 0</div>
+          <div class="stat-change">Em investimentos</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Contas Banidas</div>
+          <div class="stat-value" id="bannedUsers">0</div>
+          <div class="stat-change">Bloqueadas</div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <div class="table-header">
+          <h2>Últimas Atividades</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Usuário</th>
+              <th>Valor</th>
+              <th>Data/Hora</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="activitiesTable">
+            <tr>
+              <td colspan="5" class="loading">
+                <div class="spinner"></div>
+                Carregando atividades...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="auth.js"></script>
+  <script src="admin.js"></script>
+
+  <script>
+    checkAdminAuth();
+
+    async function loadDashboard() {
+      try {
+        // Carregar dados dos usuários
+        const usersSnap = await db.collection('users').get();
+        const users = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Carregar dados dos saques
+        const withdrawalsSnap = await db.collection('withdrawals').get();
+        const withdrawals = withdrawalsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Calcular estatísticas
+        const totalUsers = users.length;
+        const activeUsers = users.filter(u => !u.banned).length;
+        const bannedUsers = users.filter(u => u.banned).length;
+        
+        const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending').length;
+        const pendingAmount = withdrawals
+          .filter(w => w.status === 'pending')
+          .reduce((sum, w) => sum + (w.amount || 0), 0);
+
+        const totalBalance = users.reduce((sum, u) => sum + (u.balance || 0), 0);
+
+        // Atualizar UI
+        document.getElementById('totalUsers').textContent = totalUsers;
+        document.getElementById('activeUsers').textContent = `${activeUsers} ativos`;
+        document.getElementById('pendingWithdrawals').textContent = pendingWithdrawals;
+        document.getElementById('withdrawalAmount').textContent = `R$ ${pendingAmount.toFixed(2)}`;
+        document.getElementById('totalBalance').textContent = `R$ ${totalBalance.toFixed(2)}`;
+        document.getElementById('bannedUsers').textContent = bannedUsers;
+
+        // Carregar últimas atividades
+        loadActivities();
+      } catch (error) {
+        console.error('Erro ao carregar dashboard:', error);
+      }
+    }
+
+    async function loadActivities() {
+      try {
+        const depositsSnap = await db.collection('deposits').limit(5).get();
+        const withdrawalsSnap = await db.collection('withdrawals').limit(5).get();
+
+        const activities = [];
+
+        depositsSnap.docs.forEach(doc => {
+          const data = doc.data();
+          activities.push({
+            type: 'Depósito',
+            userId: data.userId,
+            userName: data.userName || 'Anônimo',
+            amount: data.amount,
+            date: data.createdAt,
+            status: data.status
+          });
+        });
+
+        withdrawalsSnap.docs.forEach(doc => {
+          const data = doc.data();
+          activities.push({
+            type: 'Saque',
+            userId: data.userId,
+            userName: data.userName || 'Anônimo',
+            amount: data.amount,
+            date: data.createdAt,
+            status: data.status
+          });
+        });
+
+        activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        const tbody = document.getElementById('activitiesTable');
+        tbody.innerHTML = '';
+
+        if (activities.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #666;">Nenhuma atividade registrada</td></tr>';
+          return;
+        }
+
+        activities.forEach(activity => {
+          const row = document.createElement('tr');
+          const date = new Date(activity.date).toLocaleString('pt-BR');
+          
+          row.innerHTML = `
+            <td>${activity.type}</td>
+            <td>${activity.userName}</td>
+            <td>R$ ${activity.amount.toFixed(2)}</td>
+            <td>${date}</td>
+            <td>
+              <span class="status-badge status-${activity.status}">
+                ${activity.status === 'pending' ? 'Pendente' : activity.status === 'approved' ? 'Aprovado' : 'Rejeitado'}
+              </span>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Erro ao carregar atividades:', error);
+      }
+    }
+
+    // Carregamento inicial
+    loadDashboard();
+    setInterval(loadDashboard, 30000); // Atualizar a cada 30 segundos
+  </script>
+</body>
+
+</html>
