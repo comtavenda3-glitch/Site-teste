@@ -442,4 +442,3 @@ export function Profile({ user, onLogout, onDeposit, onConfirmDeposit, onWithdra
     />
   </div>
 </div>
-{/* BLOCO PIX TERMINA AQUI */}
