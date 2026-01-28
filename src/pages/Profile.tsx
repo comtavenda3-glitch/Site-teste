@@ -376,93 +376,70 @@ export function Profile({ user, onLogout, onDeposit, onConfirmDeposit, onWithdra
         )}
 
         {showSuccess && (
-          <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 mb-4 flex items-center gap-3 animate-slide-down">
-            <CheckCircle className="w-5 h-5 text-primary-500" />
-            <p className="text-primary-400 text-sm">Saque solicitado com sucesso!</p>
-          </div>
-        )}
+  <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 mb-4 flex items-center gap-3 animate-slide-down">
+    <CheckCircle className="w-5 h-5 text-primary-500" />
+    <p className="text-primary-400 text-sm">Saque solicitado com sucesso!</p>
+  </div>
+)}
 
-        <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-gray-400 text-sm">Saldo disponível</span>
-            <span className="text-white font-bold">R$ {user.balance.toFixed(2)}</span>
-          </div>
-        </div>
-
-        <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-4">
-          <label className="text-gray-400 text-sm mb-2 block">Valor do saque</label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
-            <input
-              type="number"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              placeholder="0,00"
-              className="w-full bg-dark-600 border border-dark-500 rounded-xl py-4 pl-12 pr-4 text-white text-lg font-bold placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-all"
-            />
-          </div>
-          <p className="text-gray-500 text-xs mt-2">Mínimo: R$ 35,00 | Taxa: 10%</p>
-        </div>
-
-        {parseFloat(withdrawAmount) >= 35 && (
-          <div className="bg-dark-600/50 rounded-xl p-3 mb-4 animate-fade-in">
-            <div className="flex justify-between text-sm mb-1">
-              <span className="text-gray-400">Valor solicitado:</span>
-              <span className="text-white">R$ {parseFloat(withdrawAmount).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm mb-1">
-              <span className="text-gray-400">Taxa (10%):</span>
-              <span className="text-red-400">- R$ {fee.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm font-bold border-t border-dark-500 pt-2 mt-2">
-              <span className="text-gray-300">Você receberá:</span>
-              <span className="text-primary-500">R$ {netAmount.toFixed(2)}</span>
-            </div>
-          </div>
-        )}
-
-        <div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-4">
-          <label className="text-gray-400 text-sm mb-3 block">Tipo de chave PIX</label>
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            <button
-              onClick={() => setPixType('cpf')}
-              className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${pixType === 'cpf' ? 'bg-primary-500/20 border border-primary-500' : 'bg-dark-600 border border-dark-500'
-                }`}
-            >
-              <CreditCard className={`w-5 h-5 ${pixType === 'cpf' ? 'text-primary-500' : 'text-gray-400'}`} />
-              <span className={`text-xs ${pixType === 'cpf' ? 'text-primary-400' : 'text-gray-400'}`}>CPF</span>
-            </button>
-            <button
-              onClick={() => setPixType('email')}
-              className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${pixType === 'email' ? 'bg-primary-500/20 border border-primary-500' : 'bg-dark-600 border border-dark-500'
-                }`}
-            >
-              <Mail className={`w-5 h-5 ${pixType === 'email' ? 'text-primary-500' : 'text-gray-400'}`} />
-              <span className={`text-xs ${pixType === 'email' ? 'text-primary-400' : 'text-gray-400'}`}>Email</span>
-            </button>
-            <button
-              onClick={() => setPixType('phone')}
-              className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${pixType === 'phone' ? 'bg-primary-500/20 border border-primary-500' : 'bg-dark-600 border border-dark-500'
-                }`}
-            >
-              <Phone className={`w-5 h-5 ${pixType === 'phone' ? 'text-primary-500' : 'text-gray-400'}`} />
-              <span className={`text-xs ${pixType === 'phone' ? 'text-primary-400' : 'text-gray-400'}`}>Telefone</span>
-            </button>
-          </div>
-
-          <div>
-  <label className="text-gray-400 text-sm mb-2 block">
-    Chave PIX ({pixType.toUpperCase()})
-  </label>
-  <input
-    type="text"
-    value={pixKey}
-    onChange={(e) => setPixKey(e.target.value)}
-    placeholder={
-      pixType === 'cpf' ? '000.000.000-00' :
-      pixType === 'email' ? 'seu@email.com' :
-      '(00) 00000-0000'
-    }
-    className="w-full bg-dark-600 border border-dark-500 rounded-xl py-4 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-all"
-  />
+<div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-4">
+  <div className="flex justify-between items-center mb-2">
+    <span className="text-gray-400 text-sm">Saldo disponível</span>
+    <span className="text-white font-bold">R$ {user.balance.toFixed(2)}</span>
+  </div>
 </div>
+
+{/* BLOCO PIX COMEÇA AQUI */}
+<div className="bg-dark-700/80 backdrop-blur-sm border border-dark-600 rounded-xl p-4 mb-4">
+  <label className="text-gray-400 text-sm mb-3 block">Tipo de chave PIX</label>
+
+  <div className="grid grid-cols-3 gap-2 mb-4">
+    <button
+      onClick={() => setPixType('cpf')}
+      className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
+        pixType === 'cpf' ? 'bg-primary-500/20 border border-primary-500' : 'bg-dark-600 border border-dark-500'
+      }`}
+    >
+      <CreditCard className={`w-5 h-5 ${pixType === 'cpf' ? 'text-primary-500' : 'text-gray-400'}`} />
+      <span className={`text-xs ${pixType === 'cpf' ? 'text-primary-400' : 'text-gray-400'}`}>CPF</span>
+    </button>
+
+    <button
+      onClick={() => setPixType('email')}
+      className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
+        pixType === 'email' ? 'bg-primary-500/20 border border-primary-500' : 'bg-dark-600 border border-dark-500'
+      }`}
+    >
+      <Mail className={`w-5 h-5 ${pixType === 'email' ? 'text-primary-500' : 'text-gray-400'}`} />
+      <span className={`text-xs ${pixType === 'email' ? 'text-primary-400' : 'text-gray-400'}`}>Email</span>
+    </button>
+
+    <button
+      onClick={() => setPixType('phone')}
+      className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
+        pixType === 'phone' ? 'bg-primary-500/20 border border-primary-500' : 'bg-dark-600 border border-dark-500'
+      }`}
+    >
+      <Phone className={`w-5 h-5 ${pixType === 'phone' ? 'text-primary-500' : 'text-gray-400'}`} />
+      <span className={`text-xs ${pixType === 'phone' ? 'text-primary-400' : 'text-gray-400'}`}>Telefone</span>
+    </button>
+  </div>
+
+  <div>
+    <label className="text-gray-400 text-sm mb-2 block">
+      Chave PIX ({pixType.toUpperCase()})
+    </label>
+    <input
+      type="text"
+      value={pixKey}
+      onChange={(e) => setPixKey(e.target.value)}
+      placeholder={
+        pixType === 'cpf' ? '000.000.000-00' :
+        pixType === 'email' ? 'seu@email.com' :
+        '(00) 00000-0000'
+      }
+      className="w-full bg-dark-600 border border-dark-500 rounded-xl py-4 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-all"
+    />
+  </div>
+</div>
+{/* BLOCO PIX TERMINA AQUI */}
