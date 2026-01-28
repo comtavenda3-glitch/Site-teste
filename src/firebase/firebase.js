@@ -1,13 +1,13 @@
-// Firebase v9+ modular
-import { initializeApp } from "firebase/app";
-import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+// Inicializa o Firebase (CDN v10/v12)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+import { getAuth, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBo05t4KVpfwF9biqW6DdthsFJAHjrDroE",
   authDomain: "monety-site-2.firebaseapp.com",
   projectId: "monety-site-2",
-  storageBucket: "monety-site-2.appspot.com",
+  storageBucket: "monety-site-2.firebasestorage.app",
   messagingSenderId: "99984573236",
   appId: "1:99984573236:web:3dd0f46f383bf8fd211b61"
 };
@@ -17,5 +17,5 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// Persistência local pro usuário não deslogar ao atualizar
+// Persistência local de login
 setPersistence(auth, browserLocalPersistence);
