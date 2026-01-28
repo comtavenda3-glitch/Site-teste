@@ -450,15 +450,19 @@ export function Profile({ user, onLogout, onDeposit, onConfirmDeposit, onWithdra
             </button>
           </div>
 
-          <label className="text-gray-400 text-sm mb-2 block">Chave PIX ({pixType.toUpperCase()})</label>
-          <input
-  type="text"
-  value={pixKey}
-  onChange={(e) => setPixKey(e.target.value)}
-  placeholder={
-    pixType === 'cpf' ? '000.000.000-00' :
-    pixType === 'email' ? 'seu@email.com' :
-    '(00) 00000-0000'
-  }
-  className="w-full bg-dark-600 border border-dark-500 rounded-xl py-4 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-all"
-/>
+          <div>
+  <label className="text-gray-400 text-sm mb-2 block">
+    Chave PIX ({pixType.toUpperCase()})
+  </label>
+  <input
+    type="text"
+    value={pixKey}
+    onChange={(e) => setPixKey(e.target.value)}
+    placeholder={
+      pixType === 'cpf' ? '000.000.000-00' :
+      pixType === 'email' ? 'seu@email.com' :
+      '(00) 00000-0000'
+    }
+    className="w-full bg-dark-600 border border-dark-500 rounded-xl py-4 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-all"
+  />
+</div>
