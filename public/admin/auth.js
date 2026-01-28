@@ -11,7 +11,7 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-export async function loginAdmin(email, password) {
+async function loginAdmin(email, password) {
   try {
     // Verificar se é admin
     const adminRef = doc(db, "admins", email);
@@ -51,13 +51,13 @@ function formatFirebaseError(error) {
   return errorMap[error.code] || "Erro ao autenticar. Tente novamente";
 }
 
-export async function logoutAdmin() {
+async function logoutAdmin() {
   await signOut(auth);
   localStorage.removeItem("adminAuth");
   window.location.href = "../admin.html";
 }
 
-export function checkAdminAuth() {
+function checkAdminAuth() {
   const adminAuth = localStorage.getItem("adminAuth");
   if (!adminAuth) {
     window.location.href = "../admin.html";
@@ -65,3 +65,8 @@ export function checkAdminAuth() {
   }
   return JSON.parse(adminAuth);
 }
+
+// Expor para o HTML
+window.loginAdmin = loginAdmin;
+window.logoutAdmin = logoutAdmin;
+window.checkAdminAuth = checkAdminAuth;
