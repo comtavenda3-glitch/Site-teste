@@ -3,12 +3,16 @@ import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react'
 import { Toast } from '../components/Toast'
 import { Logo } from '../components/Logo'
 
+// Importações do Firebase
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '../firebase/firebase'
+
 interface LoginProps {
-  onLogin: (email: string, password: string) => { success: boolean; error?: string }
+  // onLogin removido pois a lógica agora é interna via Firebase
   onGoToRegister: () => void
 }
 
-export function Login({ onLogin, onGoToRegister }: LoginProps) {
+export function Login({ onGoToRegister }: LoginProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -21,16 +25,38 @@ export function Login({ onLogin, onGoToRegister }: LoginProps) {
     setError('')
     setIsLoading(true)
 
-    const result = onLogin(email, password)
-
-    if (!result.success) {
-      setError(result.error || 'Erro ao fazer login')
+    if (!email || !password) {
+      setError('Por favor, preencha todos os campos.')
       setIsLoading(false)
-    } else {
+      return
+    }
+
+    try {
+      // Autenticação Real via Firebase
+      await signInWithEmailAndPassword(auth, email, password)
+      
+      // Se chegou aqui, o login foi sucesso
       setShowSuccessToast(true)
+      
+      // O redirecionamento acontece automaticamente porque o 
+      // useAuth (no App.tsx) detectará a mudança de usuário.
+      // Apenas damos um tempo para o Toast aparecer.
       setTimeout(() => {
         setIsLoading(false)
       }, 1500)
+
+    } catch (err: any) {
+      setIsLoading(false)
+      console.error("Erro no login:", err)
+
+      // Tratamento de erros comuns de Login
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        setError('E-mail ou senha incorretos.')
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Muitas tentativas falhas. Tente novamente mais tarde.')
+      } else {
+        setError('Erro ao conectar. Verifique sua internet.')
+      }
     }
   }
 
