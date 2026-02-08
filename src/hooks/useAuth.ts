@@ -14,7 +14,7 @@ import {
   serverTimestamp, 
   getDoc 
 } from 'firebase/firestore'
-import { auth, db } from '../services/firebase'
+import { auth, db } from '../firebase/firebase'
 import { User, Deposit, Withdrawal } from '../types'
 
 // Definição da URL base do Pipedream
