@@ -3,11 +3,10 @@ import { Eye, EyeOff, Mail, Lock, Users, AlertCircle, CheckCircle, User } from '
 import { Toast } from '../components/Toast'
 import { Logo } from '../components/Logo'
 
-// Importações do Firebase Modular (v9+)
+// Importações do Firebase Modular
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
-// Importa as instâncias já inicializadas do seu arquivo de configuração
-import { auth, db } from '../firebase/firebase'
+import { auth, db } from '../firebase/firebase' 
 
 interface RegisterProps {
   onGoToLogin: () => void
@@ -29,85 +28,59 @@ export function Register({ onGoToLogin, initialInviteCode = '' }: RegisterProps)
   const passwordsMatch = password === confirmPassword
   const showPasswordError = confirmPassword.length > 0 && !passwordsMatch
 
-  // Funções auxiliares (mantendo funcionalidade existente)
-  const generateDisplayId = () => 'ID' + Math.floor(100000 + Math.random() * 900000).toString()
-  const generateMyInviteCode = () => 'MN' + Math.random().toString(36).substring(2, 8).toUpperCase()
-
-  // Função Async única para tratar todo o fluxo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    // Validações básicas
-    if (!name.trim()) {
-      setError('Digite seu nome')
-      return
-    }
-
-    if (!passwordsMatch) {
-      setError('As senhas não coincidem')
-      return
-    }
-
-    if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres')
-      return
-    }
+    // Validações básicas de UI
+    if (!name.trim()) return setError('Digite seu nome')
+    if (!passwordsMatch) return setError('As senhas não coincidem')
+    if (password.length < 6) return setError('A senha deve ter pelo menos 6 caracteres')
 
     setIsLoading(true)
 
+    // INÍCIO DO BLOCO DE LÓGICA E DEPURAÇÃO
     try {
-      // 1. Criar usuário no Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-      const user = userCredential.user
+      console.log("1. Iniciando Auth...");
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      console.log("2. Usuário criado no Auth:", user.uid);
 
-      // 2. Atualizar o perfil do Auth (DisplayName)
-      await updateProfile(user, {
-        displayName: name
-      })
+      await updateProfile(user, { displayName: name });
+      console.log("3. Perfil atualizado.");
 
-      // 3. Criar documento na collection "users" no Firestore
-      // A referência do documento usa user.uid para garantir relação 1:1
+      console.log("4. Tentando gravar no Firestore...");
+      // Criando o documento na coleção "users" com o ID sendo o UID do Auth
       await setDoc(doc(db, "users", user.uid), {
-        // Campos Obrigatórios solicitados
-        email: email,
+        email,
+        name,
         balance: 0,
         createdAt: serverTimestamp(),
         checkinDays: [],
-        
-        // Campos adicionais da sua aplicação (mantidos para não quebrar funcionalidades)
         uid: user.uid,
-        name: name,
-        displayId: generateDisplayId(),
-        inviteCode: generateMyInviteCode(),
-        invitedBy: inviteCode || null,
-        role: 'user',
-        totalEarnings: 0
-      })
+        invitedBy: inviteCode || null
+      });
+      console.log("5. Documento criado com sucesso!");
 
-      // 4. Sucesso: Mostrar Toast e redirecionar
-      setShowSuccessToast(true)
+      setShowSuccessToast(true);
       
       setTimeout(() => {
-        setIsLoading(false)
-        onGoToLogin()
-      }, 2000)
+        onGoToLogin();
+      }, 2000);
 
     } catch (err: any) {
-      setIsLoading(false)
-      console.error("Erro no cadastro:", err)
-
-      // Tratamento de erros
+      console.error("ERRO DETALHADO:", err); // Verifique o console (F12) para ver o erro exato
+      
+      // Tradução amigável de erros comuns
       if (err.code === 'auth/email-already-in-use') {
-        setError('Este e-mail já está sendo usado por outra conta.')
-      } else if (err.code === 'auth/invalid-email') {
-        setError('O formato do e-mail é inválido.')
-      } else if (err.code === 'auth/weak-password') {
-        setError('A senha é muito fraca.')
+        setError('Este e-mail já está cadastrado.');
       } else {
-        setError('Ocorreu um erro ao criar a conta. Tente novamente.')
+        setError(err.message || 'Erro ao criar conta.');
       }
+    } finally {
+      setIsLoading(false);
     }
+    // FIM DO BLOCO DE LÓGICA
   }
 
   return (
@@ -186,8 +159,7 @@ export function Register({ onGoToLogin, initialInviteCode = '' }: RegisterProps)
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirmar senha"
-              className={`w-full bg-dark-700/80 backdrop-blur-sm border rounded-xl py-4 pl-12 pr-12 text-white placeholder-gray-500 focus:outline-none transition-all ${showPasswordError ? 'border-red-500' : confirmPassword && passwordsMatch ? 'border-primary-500' : 'border-dark-600 focus:border-primary-500'
-                }`}
+              className={`w-full bg-dark-700/80 backdrop-blur-sm border rounded-xl py-4 pl-12 pr-12 text-white placeholder-gray-500 focus:outline-none transition-all ${showPasswordError ? 'border-red-500' : confirmPassword && passwordsMatch ? 'border-primary-500' : 'border-dark-600 focus:border-primary-500'}`}
               required
             />
             <button
@@ -198,20 +170,6 @@ export function Register({ onGoToLogin, initialInviteCode = '' }: RegisterProps)
               {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
-
-          {showPasswordError && (
-            <div className="flex items-center gap-2 text-red-400 text-sm animate-slide-down">
-              <AlertCircle className="w-4 h-4" />
-              <span>As senhas não coincidem</span>
-            </div>
-          )}
-
-          {confirmPassword && passwordsMatch && (
-            <div className="flex items-center gap-2 text-primary-400 text-sm animate-slide-down">
-              <CheckCircle className="w-4 h-4" />
-              <span>Senhas coincidem</span>
-            </div>
-          )}
 
           <div className="relative">
             <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
