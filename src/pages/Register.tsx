@@ -6,7 +6,7 @@ import { Logo } from '../components/Logo'
 // Importações do Firebase
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { auth, db } from '../services/firebase' // Ajuste o caminho se necessário
+import { auth, db } from '../firebase/firebase' // Ajuste o caminho se necessário
 
 interface RegisterProps {
   // onRegister removido pois agora a lógica é interna
