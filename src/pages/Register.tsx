@@ -3,13 +3,18 @@ import { Eye, EyeOff, Mail, Lock, Users, AlertCircle, CheckCircle, User } from '
 import { Toast } from '../components/Toast'
 import { Logo } from '../components/Logo'
 
+// Importações do Firebase
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { auth, db } from '../services/firebase' // Ajuste o caminho se necessário
+
 interface RegisterProps {
-  onRegister: (name: string, email: string, password: string, inviteCode?: string) => { success: boolean; error?: string }
+  // onRegister removido pois agora a lógica é interna
   onGoToLogin: () => void
   initialInviteCode?: string
 }
 
-export function Register({ onRegister, onGoToLogin, initialInviteCode = '' }: RegisterProps) {
+export function Register({ onGoToLogin, initialInviteCode = '' }: RegisterProps) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -23,6 +28,12 @@ export function Register({ onRegister, onGoToLogin, initialInviteCode = '' }: Re
 
   const passwordsMatch = password === confirmPassword
   const showPasswordError = confirmPassword.length > 0 && !passwordsMatch
+
+  // Função auxiliar para gerar ID de exibição (opcional, mas útil para o usuário ver)
+  const generateDisplayId = () => 'ID' + Math.floor(100000 + Math.random() * 900000).toString()
+  
+  // Função auxiliar para gerar código de convite do próprio usuário
+  const generateMyInviteCode = () => 'MN' + Math.random().toString(36).substring(2, 8).toUpperCase()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,17 +56,52 @@ export function Register({ onRegister, onGoToLogin, initialInviteCode = '' }: Re
 
     setIsLoading(true)
 
-    const result = onRegister(name, email, password, inviteCode || undefined)
+    try {
+      // 1. Criar usuário no Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      const user = userCredential.user
 
-    if (!result.success) {
-      setError(result.error || 'Erro ao criar conta')
-      setIsLoading(false)
-    } else {
+      // 2. Atualizar o nome de exibição no Auth
+      await updateProfile(user, {
+        displayName: name
+      })
+
+      // 3. Salvar dados adicionais no Firestore (Banco de Dados Real)
+      // Usamos o UID do Auth como ID do documento para facilitar segurança
+      await setDoc(doc(db, "usuarios", user.uid), {
+        uid: user.uid,
+        name: name,
+        email: email,
+        displayId: generateDisplayId(),
+        inviteCode: generateMyInviteCode(), // O código que este usuário usará para convidar outros
+        invitedBy: inviteCode || null, // Quem convidou este usuário
+        balance: 0, // Saldo inicial seguro
+        totalEarnings: 0,
+        createdAt: serverTimestamp(), // Data do servidor (mais seguro que data local)
+        role: 'user'
+      })
+
+      // 4. Sucesso
       setShowSuccessToast(true)
       setTimeout(() => {
         setIsLoading(false)
         onGoToLogin()
       }, 2000)
+
+    } catch (err: any) {
+      setIsLoading(false)
+      console.error("Erro no cadastro:", err)
+
+      // Tratamento de erros comuns do Firebase em Português
+      if (err.code === 'auth/email-already-in-use') {
+        setError('Este e-mail já está sendo usado por outra conta.')
+      } else if (err.code === 'auth/invalid-email') {
+        setError('O formato do e-mail é inválido.')
+      } else if (err.code === 'auth/weak-password') {
+        setError('A senha é muito fraca.')
+      } else {
+        setError('Ocorreu um erro ao criar a conta. Tente novamente.')
+      }
     }
   }
 
