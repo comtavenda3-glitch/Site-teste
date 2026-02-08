@@ -3,13 +3,13 @@ import { Eye, EyeOff, Mail, Lock, Users, AlertCircle, CheckCircle, User } from '
 import { Toast } from '../components/Toast'
 import { Logo } from '../components/Logo'
 
-// Importações do Firebase
+// Importações do Firebase Modular (v9+)
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { auth, db } from '../firebase/firebase' // Ajuste o caminho se necessário
+// Importa as instâncias já inicializadas do seu arquivo de configuração
+import { auth, db } from '../firebase/firebase'
 
 interface RegisterProps {
-  // onRegister removido pois agora a lógica é interna
   onGoToLogin: () => void
   initialInviteCode?: string
 }
@@ -29,16 +29,16 @@ export function Register({ onGoToLogin, initialInviteCode = '' }: RegisterProps)
   const passwordsMatch = password === confirmPassword
   const showPasswordError = confirmPassword.length > 0 && !passwordsMatch
 
-  // Função auxiliar para gerar ID de exibição (opcional, mas útil para o usuário ver)
+  // Funções auxiliares (mantendo funcionalidade existente)
   const generateDisplayId = () => 'ID' + Math.floor(100000 + Math.random() * 900000).toString()
-  
-  // Função auxiliar para gerar código de convite do próprio usuário
   const generateMyInviteCode = () => 'MN' + Math.random().toString(36).substring(2, 8).toUpperCase()
 
+  // Função Async única para tratar todo o fluxo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
+    // Validações básicas
     if (!name.trim()) {
       setError('Digite seu nome')
       return
@@ -57,32 +57,37 @@ export function Register({ onGoToLogin, initialInviteCode = '' }: RegisterProps)
     setIsLoading(true)
 
     try {
-      // 1. Criar usuário no Firebase Auth
+      // 1. Criar usuário no Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password)
       const user = userCredential.user
 
-      // 2. Atualizar o nome de exibição no Auth
+      // 2. Atualizar o perfil do Auth (DisplayName)
       await updateProfile(user, {
         displayName: name
       })
 
-      // 3. Salvar dados adicionais no Firestore (Banco de Dados Real)
-      // Usamos o UID do Auth como ID do documento para facilitar segurança
-      await setDoc(doc(db, "usuarios", user.uid), {
+      // 3. Criar documento na collection "users" no Firestore
+      // A referência do documento usa user.uid para garantir relação 1:1
+      await setDoc(doc(db, "users", user.uid), {
+        // Campos Obrigatórios solicitados
+        email: email,
+        balance: 0,
+        createdAt: serverTimestamp(),
+        checkinDays: [],
+        
+        // Campos adicionais da sua aplicação (mantidos para não quebrar funcionalidades)
         uid: user.uid,
         name: name,
-        email: email,
         displayId: generateDisplayId(),
-        inviteCode: generateMyInviteCode(), // O código que este usuário usará para convidar outros
-        invitedBy: inviteCode || null, // Quem convidou este usuário
-        balance: 0, // Saldo inicial seguro
-        totalEarnings: 0,
-        createdAt: serverTimestamp(), // Data do servidor (mais seguro que data local)
-        role: 'user'
+        inviteCode: generateMyInviteCode(),
+        invitedBy: inviteCode || null,
+        role: 'user',
+        totalEarnings: 0
       })
 
-      // 4. Sucesso
+      // 4. Sucesso: Mostrar Toast e redirecionar
       setShowSuccessToast(true)
+      
       setTimeout(() => {
         setIsLoading(false)
         onGoToLogin()
@@ -92,7 +97,7 @@ export function Register({ onGoToLogin, initialInviteCode = '' }: RegisterProps)
       setIsLoading(false)
       console.error("Erro no cadastro:", err)
 
-      // Tratamento de erros comuns do Firebase em Português
+      // Tratamento de erros
       if (err.code === 'auth/email-already-in-use') {
         setError('Este e-mail já está sendo usado por outra conta.')
       } else if (err.code === 'auth/invalid-email') {
